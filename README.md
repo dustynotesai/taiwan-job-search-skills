@@ -185,7 +185,43 @@ cd .agents/skills/yourator-search/cli
 npx tsx src/cli.ts search -q "backend" -l Taipei --format table
 ```
 
-LinkedIn 那支也一樣（在 `.agents/skills/linkedin-search/cli` 裡跑 `npx tsx src/cli.ts ...`）。這時可以直接跟 Claude 說：「Bun 在我電腦上被擋，請改用 `npx tsx` 跑職缺搜尋工具。」
+LinkedIn 那支也一樣（在 `.agents/skills/linkedin-search/cli` 裡跑 `npx tsx src/cli.ts ...`）。
+
+要讓 Claude 在 `/scrape`、`/apply` 裡自動改用 Node，在 `ai-job-search` 資料夾加兩個**只留在你電腦上**的檔案（都不會被 git 追蹤）：
+
+`CLAUDE.local.md`：
+
+```markdown
+# This machine: Bun is blocked
+
+Windows Smart App Control blocks `bun.exe` here. Do not try `bun`.
+Wherever a skill, command or agent says
+
+    bun run .agents/skills/<portal>/cli/src/cli.ts <args>
+
+run exactly
+
+    npx -y tsx .agents/skills/<portal>/cli/src/cli.ts <args>
+
+from the repo root. `bun test` / `bun install` cannot run here; skip them and say so.
+```
+
+`.claude/settings.local.json`（放行這兩支工具、關掉 Node 的警告訊息）：
+
+```json
+{
+  "env": { "NODE_OPTIONS": "--no-deprecation" },
+  "permissions": {
+    "allow": [
+      "Bash(npx -y tsx .agents/skills/linkedin-search/cli/src/cli.ts:*)",
+      "Bash(npx -y tsx .agents/skills/yourator-search/cli/src/cli.ts:*)"
+    ]
+  }
+}
+```
+
+然後在 Windows 的終端機（Git Bash）把 `CLAUDE.local.md` 設成不追蹤：`echo CLAUDE.local.md >> .git/info/exclude`。
+第一次在這個資料夾開 `claude` 時，記得按「信任這個資料夾」，權限設定才會生效。
 
 **搜中文還是英文？**
 
